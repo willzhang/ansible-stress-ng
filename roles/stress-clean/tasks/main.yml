@@ -1,0 +1,23 @@
+---
+- name: Register screen session
+  find:
+    paths: '/var/run/screen/S-root/'
+    file_type: 'any'
+    patterns: '*.stress'
+  register: find_result
+
+- name: clean screen session
+  shell: 'screen -X -S {{ item.path | basename }} quit'
+  with_items: "{{ find_result.files }}"
+  when: find_result.matched != 0
+
+- name: Get stress-ng process count
+  shell: ps -ef | grep "[s]tress-ng" |wc -l
+  register: stress_procs
+  changed_when: False
+  check_mode: False
+
+- name: Fail if stress-ng processes not clean
+  fail:
+    msg: Found screens processes. stress-ng probably did not clean. Run clean again.
+  when: stress_procs.stdout|int != 0
