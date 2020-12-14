@@ -1,1 +1,0 @@
-# ansible-stress-ng
